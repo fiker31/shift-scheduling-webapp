@@ -1,0 +1,5 @@
+node_modules/
+*.log
+```
+
+This will exclude the `node_modules` directory and any files with the `.log` extension from being tracked by Git.

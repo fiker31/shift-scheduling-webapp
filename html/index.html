@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Management</title>
+</head>
+<body>
+    <main>
+        <div id="shift-display">
+            <!-- Shifts will be dynamically inserted here -->
+        </div>
+
+        <form id="shift-creation-form">
+            <label for="start-time">Start Time:</label>
+            <input type="text" id="start-time" name="start-time" placeholder="Enter start time">
+
+            <label for="end-time">End Time:</label>
+            <input type="text" id="end-time" name="end-time" placeholder="Enter end time">
+
+            <button type="submit">Add Shift</button>
+        </form>
+
+        <ul id="shift-list">
+            <!-- Shifts will be dynamically inserted here -->
+        </ul>
+    </main>
+
+    <script>
+        // Send a POST request to create a new shift
+        const shiftCreationForm = document.getElementById('shift-creation-form');
+        shiftCreationForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+
+            try {
+                const response = await fetch('/shifts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ startTime, endTime }),
+                });
+
+                if (response.ok) {
+                    // Refresh the shift display after successful creation
+                    fetchShifts();
+                }
+            } catch (error) {
+                console.error('Error creating shift:', error);
+            }
+        });
+
+        // Send a DELETE request to delete a shift
+        const shiftList = document.getElementById('shift-list');
+        shiftList.addEventListener('click', async (event) => {
+            if (event.target.classList.contains('delete-button')) {
+                const shiftId = event.target.dataset.shiftId;
+
+                try {
+                    const response = await fetch(`/shifts/${shiftId}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                        // Refresh the shift display after successful deletion
+                        fetchShifts();
+                    }
+                } catch (error) {
+                    console.error('Error deleting shift:', error);
+                }
+            }
+        });
+        // Fetch and display shifts on page load
+        document.addEventListener('DOMContentLoaded', fetchShifts);
+
+        async function fetchShifts() {
+            try {
+                const response = await fetch('/shifts');
+                const shifts = await response.json();
+
+                // Update the shift display with the retrieved shifts
+                const shiftDisplay = document.getElementById('shift-display');
+                shiftDisplay.innerHTML = '';
+
+                for (const shift of shifts) {
+                    const shiftElement = document.createElement('div');
+                    shiftElement.textContent = `Shift: ${shift.startTime} - ${shift.endTime}`;
+                    shiftDisplay.appendChild(shiftElement);
+                }
+
+                // Update the shift list with the retrieved shifts
+                const shiftList = document.getElementById('shift-list');
+                shiftList.innerHTML = '';
+
+                for (const shift of shifts) {
+                    const shiftItem = document.createElement('li');
+                    shiftItem.textContent = `Shift: ${shift.startTime} - ${shift.endTime}`;
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.classList.add('delete-button');
+                    deleteButton.dataset.shiftId = shift.id;
+
+                    shiftItem.appendChild(deleteButton);
+                    shiftList.appendChild(shiftItem);
+                }
+            } catch (error) {
+                console.error('Error fetching shifts:', error);
+            }
+        }
+    </script>
+</body>
+</html>
